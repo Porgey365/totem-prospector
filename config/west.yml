@@ -47,6 +47,7 @@ manifest:
       remote: zmkfirmware
       revision: main
       import:
+        file: app/west.yml
         name-blocklist:
           - zephyr
     - name: zmk-rgbled-widget
