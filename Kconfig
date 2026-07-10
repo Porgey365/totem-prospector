@@ -1,0 +1,9 @@
+config TOTEM_APDS_PROBE
+	bool "Log the APDS9960's I2C registers at boot (diagnostic)"
+	depends on I2C
+	default n
+	help
+	  One-shot diagnostic: reads the ambient light sensor's ID register and
+	  neighbors directly over I2C at boot and logs the values, to tell a
+	  valid-but-unlisted chip id apart from an I2C communication problem.
+	  Temporary; remove once the sensor is characterized.
