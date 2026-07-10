@@ -6,50 +6,16 @@ manifest:
       url-base: https://github.com/caksoylar
     - name: carrefinho
       url-base: https://github.com/carrefinho
-    - name: porgey365
-      url-base: https://github.com/Porgey365
   projects:
-    # Overrides the "zephyr" project that zmk/app/west.yml below would
-    # otherwise import from zmkfirmware/zephyr@v4.1.0+zmk-fixes. Same base
-    # commit, plus a 2-line patch (drivers/sensor/apds9960) accepting our
-    # dongle's clone APDS9960 chip id (0x9F) -- the stock driver hard-rejects
-    # any id besides 0xAB/0x9C and there's no Kconfig to relax it. Import spec
-    # copied verbatim from zmk/app/west.yml so submodules still resolve.
-    - name: zephyr
-      remote: porgey365
-      revision: totem-apds9960-clone-id
-      clone-depth: 1
-      import:
-        name-blocklist:
-          - ci-tools
-          - hal_altera
-          - hal_cypress
-          - hal_infineon
-          - hal_microchip
-          - hal_nxp
-          - hal_openisa
-          - hal_xtensa
-          - hal_st
-          - hal_ti
-          - loramac-node
-          - mcuboot
-          - mcumgr
-          - net-tools
-          - openthread
-          - edtt
-          - trusted-firmware-m
-    # zmk/app/west.yml also lists hal_stm32, lvgl, and zmk-studio-messages as
-    # sibling projects to zephyr -- block only "zephyr" from this import
-    # (already declared above, pointed at our fork) rather than duplicating
-    # the whole project name, which caused west to drop those other projects
-    # (zmk-studio-messages missing broke the ZMK Studio dongle build).
+    # TEMP DIAGNOSTIC: zephyr fork override removed to test whether the
+    # NANOPB Kconfig "Aborting due to Kconfig warnings" failure on the
+    # dongle+studio build is caused by our fork, or is an unrelated,
+    # pre-existing issue on current zmk main (nanopb isn't in
+    # zmkfirmware/zephyr's own west.yml either, unlike upstream zephyr's).
     - name: zmk
       remote: zmkfirmware
       revision: main
-      import:
-        file: app/west.yml
-        name-blocklist:
-          - zephyr
+      import: app/west.yml
     - name: zmk-rgbled-widget
       remote: caksoylar
       revision: main
