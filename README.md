@@ -5,8 +5,10 @@ ZMK firmware configuration for the Totem 38-key split keyboard, using a
 (with display + ambient light sensor) as the BLE split central.
 
 This repo starts fresh (clean git history) from a prior debugging repo,
-`zmk-config-test`, which is kept around as reference for what's already been
-tried. See [Known Issues](#known-issues) below for open problems.
+`zmk-config-test`, which is kept around as reference for what was already
+tried. See [Known Issues](#known-issues) below for the history of what broke
+and how it was fixed — both issues found so far are resolved, and everything
+here builds and runs cleanly.
 
 ## Hardware
 
@@ -24,6 +26,9 @@ tried. See [Known Issues](#known-issues) below for open problems.
   - Deep sleep mode on the halves (30 minute idle timeout); dongle stays awake (USB powered)
 
 ## Known Issues
+
+Both issues below are resolved; kept here as a record in case either
+regresses or the symptoms resurface after a hardware change.
 
 ### ~~BLE split connection drops constantly~~ (resolved)
 
@@ -73,6 +78,13 @@ Two changes to `drivers/sensor/apds9960/`:
 
 Verified working: brightness now visibly responds to covering/uncovering
 the sensor.
+
+**This fork is a permanent dependency, not a temporary workaround** — the
+clone chip is soldered to the physical board, so `config/west.yml` needs to
+keep pointing at `Porgey365/zephyr@totem-apds9960-clone-id` (or an
+equivalent patch) indefinitely. If `zmk/app/west.yml` ever bumps its pinned
+`zephyr` revision past `v4.1.0+zmk-fixes`, this fork will need to be rebased
+onto the new commit.
 
 ## Building
 
