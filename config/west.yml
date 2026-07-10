@@ -6,17 +6,10 @@ manifest:
       url-base: https://github.com/caksoylar
     - name: carrefinho
       url-base: https://github.com/carrefinho
-    - name: akira-toriyama
-      url-base: https://github.com/akira-toriyama
   projects:
-    # DIAGNOSTIC: testing zmkfirmware/zmk#3377 (unmerged), which adds
-    # CONFIG_ZMK_SPLIT_AUTO_UNPAIR_ON_KEY_MISMATCH for split centrals whose
-    # bond for a peripheral goes stale while the peripheral keeps the old
-    # key -- same dongle+2-peripheral topology and failure class we're
-    # hitting. Revert to zmkfirmware/main once confirmed either way.
     - name: zmk
-      remote: akira-toriyama
-      revision: feat/auto-unpair-on-key-mismatch
+      remote: zmkfirmware
+      revision: main
       import: app/west.yml
     - name: zmk-rgbled-widget
       remote: caksoylar
