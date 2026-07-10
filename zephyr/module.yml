@@ -1,4 +1,0 @@
-name: totem-zmk-config
-build:
-  cmake: .
-  kconfig: Kconfig
