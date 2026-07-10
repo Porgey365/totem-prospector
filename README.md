@@ -48,12 +48,31 @@ forcing the internal RC oscillator instead —
 `CONFIG_CLOCK_CONTROL_NRF_K32SRC_RC=y` in `totem_dongle.conf`. This isn't
 needed on the halves, whose crystals are fine.
 
-### Ambient light sensor (APDS9960) not working (open, deferred)
+### ~~Ambient light sensor (APDS9960) not working~~ (resolved)
 
-The sensor on the dongle isn't producing readings. A boot-time I2C register
-probe found an unrecognized chip ID (`0x9f`) that doesn't match any
-documented genuine or clone APDS9960 ID. Deferred until the BLE issue above
-is resolved.
+The sensor wasn't producing readings. A boot-time I2C register probe found
+chip ID `0x9F` on the ID register — stable across repeated reads, not a bus
+error, but a clone/counterfeit APDS9960 with a genuinely different ID than
+Zephyr's stock driver's two hardcoded accepted values (`0xAB` genuine,
+`0x9C` known clone). No Kconfig escape hatch, and a vendored driver
+workaround doesn't work here: Prospector's `brightness.c` hardcodes
+`DEVICE_DT_GET_ONE(avago_apds9960)`, so the stock driver has to be the one
+that binds to the sensor's devicetree node.
+
+Fixed with a small patched fork of `zmkfirmware/zephyr` (same base commit
+`zmk/app/west.yml` already pins, `v4.1.0+zmk-fixes`), pointed to from
+`config/west.yml`: [Porgey365/zephyr@totem-apds9960-clone-id](https://github.com/Porgey365/zephyr/tree/totem-apds9960-clone-id).
+Two changes to `drivers/sensor/apds9960/`:
+
+- Accept `0x9F` as a third valid chip ID alongside the two stock ones
+- Stop treating a NACK'd write to `AICLEAR` (`0xE7`, a write-only
+  "clear interrupts" pulse register) as fatal — this clone doesn't
+  implement it, but it isn't needed for basic ALS operation. This bit the
+  boot-time init *and* every subsequent `sample_fetch` call, so leaving it
+  fatal would have meant readings kept failing even after "successful" init
+
+Verified working: brightness now visibly responds to covering/uncovering
+the sensor.
 
 ## Building
 
