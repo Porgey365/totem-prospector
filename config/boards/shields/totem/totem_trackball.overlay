@@ -1,0 +1,163 @@
+// ============================================================================
+// ZMK Configuration for Ploopy Adept BLE Trackball
+// Device Tree Overlay for XIAO BLE with PMW3610 Trackball Sensor
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// Includes and Definitions
+// ----------------------------------------------------------------------------
+
+// #include <input/processors.dtsi>
+// #include <input/processors/report_rate_limit.dtsi>
+// #include <dt-bindings/zmk/input_transform.h>
+// #include <behaviors/input_gestures_accel.dtsi>
+
+// #include "totem.dtsi"
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+// ----------------------------------------------------------------------------
+// Hardware Configuration: SPI Interface
+// ----------------------------------------------------------------------------
+
+&pinctrl {
+    spi0_default: spi0_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK,  1, 13)>, // SCLK P1.13 (Yellow wire)
+                    <NRF_PSEL(SPIM_MOSI, 1, 14)>, // SDIO P1.14 (Orange wire)
+                    <NRF_PSEL(SPIM_MISO, 1, 14)>; // SDIO P1.14 (shared MOSI/MISO)
+        };
+    };
+
+    spi0_sleep: spi0_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK,  1, 13)>, // SCLK P1.13
+                    <NRF_PSEL(SPIM_MOSI, 1, 14)>, // SDIO P1.14
+                    <NRF_PSEL(SPIM_MISO, 1, 14)>; // SDIO P1.14
+            low-power-enable;
+        };
+    };
+};
+
+&spi0 {
+    status = "okay";
+    compatible = "nordic,nrf-spim";
+    pinctrl-0 = <&spi0_default>;
+    pinctrl-1 = <&spi0_sleep>;
+    pinctrl-names = "default", "sleep";
+    cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>; // NCS P1.12 (Violet wire)
+
+    // PMW3610 Trackball Sensor Configuration
+    trackball: trackball@0 {
+        status = "okay";
+        compatible = "pixart,pmw3610-efogtech";
+        reg = <0>;
+        spi-max-frequency = <2000000>;  // 2MHz SPI clock
+        irq-gpios = <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; // MOT P1.15 (Brown wire)
+        cpi = <800>;                    // 800 counts per inch
+        evt-type = <INPUT_EV_REL>;
+        x-input-code = <INPUT_REL_X>;
+        y-input-code = <INPUT_REL_Y>;
+        xy-swap;                      // Maintain XY swapping without processor
+
+        // Performance mode: force-high-performance
+        // Note: force-awake can cause cursor warping/jumping - not recommended
+        force-high-performance;
+    };
+};
+
+/ {
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        
+        trackball_split: trackball_split@1 {
+            compatible = "zmk,input-split";
+            reg = <1>;  // Unique ID for the trackball
+            device = <&trackball>;
+        };
+    };
+};
+
+// ----------------------------------------------------------------------------
+// Pointer Acceleration Configuration
+// ----------------------------------------------------------------------------
+
+// &pointer_accel {
+//     // This processor must be defined BEFORE the input-listener
+//     input-type = <INPUT_EV_REL>;
+//     codes = <INPUT_REL_X INPUT_REL_Y>;
+//     
+//     // Sensitivity and Acceleration Settings
+//     sensitivity = <800>;              // 0.8x base sensitivity
+// 	min-factor = <800>;		  // 0.8x minimum for percision
+//     max-factor = <3000>;             // 3.0x maximum acceleration
+//     acceleration-exponent = <1>;     // Advanced exponential curve (1-5)
+//     
+//     // Axis-Specific Settings
+//     y-boost = <1000>;                // 1.0x Y-axis boost for widescreen monitors
+//     
+//     // Speed-Based Acceleration
+//     speed-threshold = <900>;         // Start acceleration at 900 counts/sec (~1.5 inch/sec)
+//     speed-max = <1800>;              // Max acceleration at 1800 counts/sec (~3 inch/sec)
+//     
+//     // Sensor Characteristics
+//     sensor-dpi = <600>;              // Match sensor CPI setting
+// };
+
+// ----------------------------------------------------------------------------
+// Input System Configuration
+// ----------------------------------------------------------------------------
+
+/ {
+    chosen {
+        // Mock keyboard scanner (no physical keys)
+        zmk,kscan = &kscan0;
+    };
+
+    // Mock Keyboard Scanner Configuration
+    kscan0: kscan {
+        compatible = "zmk,kscan-mock";
+        columns = <0>;
+        rows = <0>;
+        events = <0>;
+    };
+
+    // Trackball Input Listener
+    // trackball_listener {
+    //     compatible = "zmk,input-listener";
+    //     device = <&trackball>;
+        
+    //     // Input Processing Pipeline
+    //     // input-processors =
+    //     //     <&pointer_accel>,                          // Apply pointer acceleration
+    //     //     <&zip_ble_report_rate_limit 4>,           // Limit report rate to 4ms (250Hz)
+    //     //     <&zip_xy_transform (INPUT_TRANSFORM_XY_SWAP)>; // Swap X and Y axes
+    // };
+};
+
+// ----------------------------------------------------------------------------
+// Peripheral Configuration
+// ----------------------------------------------------------------------------
+
+// Disable UART to avoid pin conflicts with SPI interface
+&uart0 {
+    status = "disabled";
+};
+
+/ {
+    aliases {
+        led-red = &led0;
+        led-green = &led1;
+        led-blue = &led2;
+    };
+
+    leds {
+        status = "okay";
+    };
+};
+
+// ============================================================================
+// End of Configuration
+// ============================================================================
+
+/* More about input processors: https://zmk.dev/docs/keymaps/input-processors#input-processors-overview */
