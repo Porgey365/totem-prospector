@@ -25,24 +25,28 @@ tried. See [Known Issues](#known-issues) below for open problems.
 
 ## Known Issues
 
-### BLE split connection drops constantly (open)
+### ~~BLE split connection drops constantly~~ (resolved)
 
-Both halves connect to the dongle and then disconnect/reconnect in a loop.
-Config currently applies the standard fixes for this class of problem:
+Both halves would connect to the dongle and immediately disconnect/reconnect
+in a loop, logging `Security failed: ... level 1 err 9` (Zephyr's
+`BT_SECURITY_ERR_UNSPECIFIED`) on every attempt.
 
-- `CONFIG_BT_MAX_CONN` / `CONFIG_BT_MAX_PAIRED` sized for 2 peripherals + 5 BLE
-  host profiles on the dongle (central) — see `totem_dongle.conf`
-- `CONFIG_BT_SMP_ALLOW_UNAUTH_OVERWRITE=y` so a stale bond on one side can't
-  permanently block re-pairing — see `totem.conf`
-- USB debug logging enabled on all three devices to capture the actual
-  disconnect reason codes
+Ruled out via USB debug logging and hardware testing, in order:
 
-None of these alone has resolved it, so it's still open. Not yet ruled out:
-physical/RF causes (USB 3.0 ports and cables are well-known 2.4GHz
-interferers for exactly this symptom — try a USB 2.0 hub or an extension
-cable to move the dongle away from the host), and bond state getting out of
-sync across the three devices after repeated reflashing (all three need
-bonds cleared together, not just the dongle, when in doubt).
+- Stale/mismatched bonds — still failed after a byte-for-byte correct
+  `settings_reset` procedure (official ZMK order) on both sides
+- Our own BLE config (`CONFIG_ZMK_BLE_EXPERIMENTAL_CONN`,
+  `CONFIG_BT_SMP_ALLOW_UNAUTH_OVERWRITE`) — still failed with vanilla ZMK
+  security settings
+- One bad keyboard half — both halves failed identically against the dongle,
+  while pairing fine with each other directly (no dongle)
+
+Root cause: **a bad external 32kHz LF crystal on the dongle board.** The LF
+clock governs BLE connection-event timing (separate from the main radio
+crystal), so USB worked fine but every BLE link was unstable. Fixed by
+forcing the internal RC oscillator instead —
+`CONFIG_CLOCK_CONTROL_NRF_K32SRC_RC=y` in `totem_dongle.conf`. This isn't
+needed on the halves, whose crystals are fine.
 
 ### Ambient light sensor (APDS9960) not working (open, deferred)
 
