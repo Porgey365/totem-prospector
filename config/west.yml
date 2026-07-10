@@ -38,10 +38,17 @@ manifest:
           - openthread
           - edtt
           - trusted-firmware-m
+    # zmk/app/west.yml also lists hal_stm32, lvgl, and zmk-studio-messages as
+    # sibling projects to zephyr -- block only "zephyr" from this import
+    # (already declared above, pointed at our fork) rather than duplicating
+    # the whole project name, which caused west to drop those other projects
+    # (zmk-studio-messages missing broke the ZMK Studio dongle build).
     - name: zmk
       remote: zmkfirmware
       revision: main
-      import: app/west.yml
+      import:
+        name-blocklist:
+          - zephyr
     - name: zmk-rgbled-widget
       remote: caksoylar
       revision: main
