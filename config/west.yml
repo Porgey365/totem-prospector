@@ -4,8 +4,8 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: caksoylar
       url-base: https://github.com/caksoylar
-    - name: carrefinho
-      url-base: https://github.com/carrefinho
+    - name: bwshockley
+      url-base: https://github.com/bwshockley
     - name: porgey365
       url-base: https://github.com/Porgey365
   projects:
@@ -52,9 +52,17 @@ manifest:
     - name: zmk-rgbled-widget
       remote: caksoylar
       revision: main
-    - name: prospector-zmk-module
-      remote: carrefinho
-      revision: feat/new-status-screens
+    # Cornix's dongle-screen module: same Prospector-compatible board (display
+    # + APDS9960), but adds a display idle timeout (auto-off after inactivity)
+    # that carrefinho/prospector-zmk-module doesn't support. Devicetree pin
+    # mapping for xiao_ble is byte-for-byte identical to prospector_adapter's,
+    # confirmed against carrefinho/prospector-zmk-module@feat/new-status-screens
+    # -- same physical hardware, so no pinout changes needed. Still binds the
+    # sensor via the stock Zephyr avago,apds9960 driver, so the zephyr fork
+    # above (clone chip id 0x9F) is still required.
+    - name: zmk-dongle-screen
+      remote: bwshockley
+      revision: main
   # zmk/app/west.yml sets this too, to re-include zephyr's "optional" group
   # (excluded by zephyr's own west.yml by default) -- needed for the Studio
   # build's nanopb dependency. Doesn't automatically propagate through our

@@ -1,8 +1,12 @@
 # ZMK Config for Totem Keyboard + Prospector Dongle
 
 ZMK firmware configuration for the Totem 38-key split keyboard, using a
-[Prospector](https://github.com/carrefinho/prospector-zmk-module) dongle
-(with display + ambient light sensor) as the BLE split central.
+[Prospector](https://github.com/carrefinho/prospector-zmk-module)-compatible
+dongle (with display + ambient light sensor) as the BLE split central. Dongle
+firmware is [Cornix's `zmk-dongle-screen`](https://github.com/bwshockley/zmk-dongle-screen)
+module rather than the original `prospector-zmk-module` — same hardware,
+same devicetree pinout, but with a display idle timeout that Prospector's
+firmware doesn't have.
 
 This repo starts fresh (clean git history) from a prior debugging repo,
 `zmk-config-test`, which is kept around as reference for what was already
@@ -14,8 +18,10 @@ here builds and runs cleanly.
 
 - **Board**: Seeeduino XIAO BLE (both halves + dongle)
 - **Keyboard**: Totem (38 keys)
-- **Dongle**: Prospector adapter — display + APDS9960 ambient light sensor,
-  acts as the BLE split central
+- **Dongle**: Prospector-compatible board — display + APDS9960 ambient light
+  sensor, acts as the BLE split central. Runs Cornix's `zmk-dongle-screen`
+  firmware module (`dongle_screen` shield), which turns the display off
+  after `CONFIG_DONGLE_SCREEN_IDLE_TIMEOUT_S` (300s) of no keyboard activity
 - **Features**:
   - Mouse/pointing support
   - ZMK Studio support (via dongle)
@@ -28,7 +34,12 @@ here builds and runs cleanly.
 ## Known Issues
 
 Both issues below are resolved; kept here as a record in case either
-regresses or the symptoms resurface after a hardware change.
+regresses or the symptoms resurface after a hardware change. Both fixes are
+firmware-module-independent (one lives in `totem_dongle.conf`, the other in
+the `config/west.yml` zephyr fork), so they carried over unchanged when the
+dongle module was switched from `prospector-zmk-module` to Cornix's
+`zmk-dongle-screen` — watch for either regressing if the dongle module
+changes again.
 
 ### ~~BLE split connection drops constantly~~ (resolved)
 
@@ -60,9 +71,11 @@ chip ID `0x9F` on the ID register — stable across repeated reads, not a bus
 error, but a clone/counterfeit APDS9960 with a genuinely different ID than
 Zephyr's stock driver's two hardcoded accepted values (`0xAB` genuine,
 `0x9C` known clone). No Kconfig escape hatch, and a vendored driver
-workaround doesn't work here: Prospector's `brightness.c` hardcodes
-`DEVICE_DT_GET_ONE(avago_apds9960)`, so the stock driver has to be the one
-that binds to the sensor's devicetree node.
+workaround doesn't work here: both Prospector's `brightness.c` and Cornix's
+`zmk-dongle-screen` equivalent bind the sensor via
+`DT_INST(0, avago_apds9960)` against the stock Zephyr driver, so the stock
+driver has to be the one that binds to the sensor's devicetree node — this
+applies to either dongle module.
 
 Fixed with a small patched fork of `zmkfirmware/zephyr` (same base commit
 `zmk/app/west.yml` already pins, `v4.1.0+zmk-fixes`), pointed to from
