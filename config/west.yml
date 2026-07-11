@@ -4,8 +4,6 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: caksoylar
       url-base: https://github.com/caksoylar
-    - name: bwshockley
-      url-base: https://github.com/bwshockley
     - name: porgey365
       url-base: https://github.com/Porgey365
   projects:
@@ -52,17 +50,19 @@ manifest:
     - name: zmk-rgbled-widget
       remote: caksoylar
       revision: main
-    # Cornix's dongle-screen module: same Prospector-compatible board (display
-    # + APDS9960), but adds a display idle timeout (auto-off after inactivity)
-    # that carrefinho/prospector-zmk-module doesn't support. Devicetree pin
-    # mapping for xiao_ble is byte-for-byte identical to prospector_adapter's,
-    # confirmed against carrefinho/prospector-zmk-module@feat/new-status-screens
-    # -- same physical hardware, so no pinout changes needed. Still binds the
-    # sensor via the stock Zephyr avago,apds9960 driver, so the zephyr fork
-    # above (clone chip id 0x9F) is still required.
-    - name: zmk-dongle-screen
-      remote: bwshockley
-      revision: main
+    # Overrides carrefinho/prospector-zmk-module@feat/new-status-screens with
+    # our own fork adding a display idle timeout (CONFIG_PROSPECTOR_IDLE_TIMEOUT_S)
+    # -- upstream doesn't support turning the display off after inactivity.
+    # We tried Cornix's zmk-dongle-screen module as a drop-in replacement
+    # first, but it fails to build: two of its widgets (battery_status.c,
+    # layer_roller.c) use LVGL v8 draw APIs that don't exist in the LVGL
+    # version ZMK's current zephyr pin uses (lv_draw_ctx_t, mismatched
+    # lv_draw_mask_fade_param_t/lv_draw_sw_mask_fade_param_t types) -- a
+    # genuine upstream bug, not a config issue. Patching our own known-good
+    # fork was more reliable than chasing that.
+    - name: prospector-zmk-module
+      remote: porgey365
+      revision: totem-idle-timeout
   # zmk/app/west.yml sets this too, to re-include zephyr's "optional" group
   # (excluded by zephyr's own west.yml by default) -- needed for the Studio
   # build's nanopb dependency. Doesn't automatically propagate through our
