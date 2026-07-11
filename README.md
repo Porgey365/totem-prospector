@@ -2,7 +2,11 @@
 
 ZMK firmware configuration for the Totem 38-key split keyboard, using a
 [Prospector](https://github.com/carrefinho/prospector-zmk-module) dongle
-(with display + ambient light sensor) as the BLE split central.
+(with display + ambient light sensor) as the BLE split central. Dongle
+firmware is our own fork of `prospector-zmk-module`
+([Porgey365/prospector-zmk-module@totem-idle-timeout](https://github.com/Porgey365/prospector-zmk-module/tree/totem-idle-timeout)),
+which adds a display idle timeout that upstream doesn't have — see
+[Known Issues](#known-issues).
 
 This repo starts fresh (clean git history) from a prior debugging repo,
 `zmk-config-test`, which is kept around as reference for what was already
@@ -15,7 +19,8 @@ here builds and runs cleanly.
 - **Board**: Seeeduino XIAO BLE (both halves + dongle)
 - **Keyboard**: Totem (38 keys)
 - **Dongle**: Prospector adapter — display + APDS9960 ambient light sensor,
-  acts as the BLE split central
+  acts as the BLE split central. Display turns off after
+  `CONFIG_PROSPECTOR_IDLE_TIMEOUT_S` (300s) of no keyboard activity
 - **Features**:
   - Mouse/pointing support
   - ZMK Studio support (via dongle)
@@ -27,8 +32,40 @@ here builds and runs cleanly.
 
 ## Known Issues
 
-Both issues below are resolved; kept here as a record in case either
+All three issues below are resolved; kept here as a record in case any
 regresses or the symptoms resurface after a hardware change.
+
+### Display doesn't turn off when idle (resolved, patched ourselves)
+
+Upstream `carrefinho/prospector-zmk-module` has no display idle timeout —
+the screen stays lit at whatever ambient-light-adjusted brightness
+indefinitely.
+
+Tried [Cornix's `zmk-dongle-screen`](https://github.com/bwshockley/zmk-dongle-screen)
+as a drop-in replacement module first, since it advertises an idle timeout.
+It fails to build against the LVGL version ZMK's current zephyr pin uses:
+two of its widgets (`battery_status.c`, `layer_roller.c`) reference LVGL v8
+draw APIs that don't exist anymore (`lv_draw_ctx_t`, and a mismatched
+`lv_draw_mask_fade_param_t`/`lv_draw_sw_mask_fade_param_t` pair) — a genuine
+upstream bug in that module, not something in our config.
+
+Patched our own fork of `prospector-zmk-module` instead, since it's the
+firmware we already know is reliable:
+[Porgey365/prospector-zmk-module@totem-idle-timeout](https://github.com/Porgey365/prospector-zmk-module/tree/totem-idle-timeout),
+based on the same `feat/new-status-screens` branch `config/west.yml` already
+pinned. Adds `CONFIG_PROSPECTOR_IDLE_TIMEOUT_S` (seconds, 0 = disabled;
+we set 300 in `totem_dongle.conf`): a new `idle_timeout.c` listens for
+`zmk_position_state_changed` (fires on the dongle for peripheral keypresses
+too) and, after the timeout, calls into `brightness.c`'s existing
+ambient-light fade thread to ramp the backlight to 0 — reusing its fade
+logic rather than driving the PWM backlight independently, since that
+thread re-asserts brightness from the sensor every ~100ms and would fight
+an external writer. Turns back on (fades in) on the next keypress.
+
+**Like the zephyr fork below, this is a permanent dependency** —
+`config/west.yml` needs to keep pointing at
+`Porgey365/prospector-zmk-module@totem-idle-timeout` (or a rebase of it)
+indefinitely, since upstream doesn't have this feature.
 
 ### ~~BLE split connection drops constantly~~ (resolved)
 
