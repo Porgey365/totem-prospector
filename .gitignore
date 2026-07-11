@@ -1,1 +1,13 @@
 firmware/
+
+# Local build environment (not for the repo)
+.venv/
+.west/
+zmk/
+zephyr/
+modules/
+build/
+build*/
+*.uf2
+prospector-zmk-module/
+zmk-rgbled-widget/
