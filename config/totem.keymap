@@ -24,6 +24,8 @@
 #define SYM         5
 #define FUN         6
 #define BUTTON      7
+#define SCROLL      8
+#define GAME        9
 
 // Key position definitions for 38-key Totem layout
 
@@ -97,7 +99,7 @@
             display-name = "Base";
             bindings = <
                &kp Q        &kp W        &kp E          &kp R          &kp T            &kp Y        &kp U         &kp I         &kp O        &kp P
-               &hml LGUI A  &hml LALT S  &hml LCTRL D   &hml LSHFT F   &kp G            &kp H        &hmr RSHFT J  &hmr RCTRL K  &hmr RALT L  &hmr RGUI SEMICOLON
+               &hml LGUI A  &hml LALT S  &hml LCTRL D   &hml LSHFT F   &kp G            &kp H        &hmr RSHFT J  &hmr RCTRL K  &hmr LALT L  &hmr RGUI SEMICOLON
 &kp RIGHT_ALT  &kp Z        &kp X        &kp C          &kp V          &kp B            &kp N        &kp M         &kp COMMA     &kp DOT      &kp SLASH            &kp SQT
                                          &lt MEDIA ESC  &lt NAV SPACE  &lt MOUSE TAB    &lt SYM RET  &lt NUM BSPC  &lt FUN DEL
             >;
@@ -158,8 +160,8 @@
             bindings = <
         &kp F12  &kp F7  &kp F8     &kp F9     &kp PSCRN          &trans  &trans     &trans     &trans    &trans
         &kp F11  &kp F4  &kp F5     &kp F6     &kp SLCK           &trans  &kp LSHFT  &kp LCTRL  &kp LALT  &kp LGUI
-&trans  &kp F10  &kp F1  &kp F2     &kp F3     &kp PAUSE_BREAK    &trans  &trans     &trans     &trans    &trans    &trans
-                         &kp K_APP  &kp SPACE  &kp TAB            &trans  &trans     &trans
+&tog GAME  &kp F10  &kp F1  &kp F2     &kp F3     &kp PAUSE_BREAK    &trans  &trans     &trans     &trans    &trans    &trans
+                            &kp K_APP  &kp SPACE  &kp TAB            &trans  &trans     &trans
             >;
         };
 
@@ -180,6 +182,16 @@
         &kp LGUI  &kp LALT  &kp LCTRL    &kp LSHFT    &mo 8          &mo 8        &kp LSHFT    &kp LCTRL    &kp LALT  &kp LGUI
 &trans  &mkp MB5  &mkp MB4  &kp LS(DEL)  &kp LC(INS)  &kp LS(INS)    &kp LS(INS)  &kp LC(INS)  &kp LS(DEL)  &mkp MB4  &mkp MB5  &trans
                             &mkp MCLK    &mkp LCLK    &mkp RCLK      &mkp RCLK    &mkp LCLK    &mkp MCLK
+            >;
+        };
+
+        game_layer {
+            display-name = "Game";
+            bindings = <
+           &kp N1  &kp N2  &kp N3  &kp N4  &kp N5     &trans  &trans  &trans  &trans  &trans
+           &kp N6  &kp N7  &kp N8  &kp N9  &kp N0     &trans  &trans  &trans  &trans  &trans
+&tog GAME  &kp F1  &kp F2  &kp F3  &kp F4  &kp F5     &trans  &trans  &trans  &trans  &trans  &trans
+                           &kp ESC  &kp SPACE  &kp LSHFT    &trans  &trans  &trans
             >;
         };
     };
