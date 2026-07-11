@@ -9,5 +9,5 @@ modules/
 build/
 build*/
 *.uf2
-zmk-dongle-screen/
+prospector-zmk-module/
 zmk-rgbled-widget/
