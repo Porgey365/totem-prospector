@@ -62,6 +62,15 @@ logic rather than driving the PWM backlight independently, since that
 thread re-asserts brightness from the sensor every ~100ms and would fight
 an external writer. Turns back on (fades in) on the next keypress.
 
+Along the way, found and fixed a pre-existing bug in `brightness.c`'s
+`bl_fade()` (present upstream too, just never noticed since nothing had
+ever asked it to fade to exactly 0 before): the loop writes the PWM value
+*before* stepping `current_brightness` towards `target`, so the final step
+never actually reaches hardware — confirmed via USB serial logging that
+`current_brightness` the variable reached `0` while the backlight stayed
+lit at 1% duty cycle (dimmed, not off). Fixed by explicitly committing the
+target value once the loop exits.
+
 **Like the zephyr fork below, this is a permanent dependency** —
 `config/west.yml` needs to keep pointing at
 `Porgey365/prospector-zmk-module@totem-idle-timeout` (or a rebase of it)
